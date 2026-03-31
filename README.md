@@ -1,12 +1,20 @@
 # 🤖 VAE-Augmented Imitation Learning with LLM-Based Goal Generation for Scalable Robot Manipulation
 
-> **Description**: A robotic pick-and-place pipeline that combines learned latent trajectory representations, proprioceptive-only behavioral cloning, and GPT-4o-driven natural language goal generation. A Variational Autoencoder (VAE) compresses low-dimensional robot state sequences into compact 14D latent embeddings, enabling efficient policy learning without high-resolution visual input. The system achieves task continuity even under exteroceptive sensor failures by augmenting a 2-layer MLP policy with precomputed VAE latents, demonstrating improved pick success rates (26 peak, 8.5 average) over raw proprioception baselines. Natural language instructions like "place the cereal next to the milk" are parsed by GPT-4o into constraint-compliant 3D target coordinates, allowing zero-shot generalisation to novel object layouts in Robosuite simulation.
+> **Description**: We worked to develop a robotic pick-and-place pipeline that combines learned latent trajectory representations, proprioceptive-only behavioral cloning, and GPT-4o-driven natural language goal generation. A Variational Autoencoder (VAE) compresses low-dimensional robot state sequences into compact 14D latent embeddings, enabling efficient policy learning without high-resolution visual input. The system achieves task continuity even under exteroceptive sensor failures by augmenting a 2-layer MLP policy with precomputed VAE latents, demonstrating improved pick success rates (26 peak, 8.5 average) over raw proprioception baselines. Natural language instructions like "place the cereal next to the milk" are parsed by GPT-4o into constraint-compliant 3D target coordinates, allowing zero-shot generalisation to novel object layouts in Robosuite simulation.
 
 [![Course](https://img.shields.io/badge/ESE%206500-Learning%20in%20Robotics-darkblue?style=for-the-badge)](https://github.com)
 [![Python](https://img.shields.io/badge/Python-3.8+-blue?style=for-the-badge&logo=python)](https://www.python.org/)
 [![PyTorch](https://img.shields.io/badge/PyTorch-2.0+-EE4C2C?style=for-the-badge&logo=pytorch)](https://pytorch.org/)
 
 <div align="center">
+
+
+<p float="left">
+<img src="output_images/robot.png" alt="Competition Stack" width="55%" />
+  <img src="output_images/terminal.png" alt="Robot Setup" width="30%" />
+</p>
+
+</div>
 
 **Full Manipulation Pipeline:**
 Natural Language → GPT-4o Goal Parser → VAE Latent Encoder → BC Policy → Pick-and-Place Execution
@@ -95,7 +103,7 @@ The full pipeline is implemented in Robosuite (v1.4.1) simulation with four comm
 │                                                                     │
 │   ┌────────────┐   ┌────────────┐   ┌────────────┐   ┌──────────┐  │
 │   │ NATURAL    │   │   GPT-4o   │   │CONSTRAINT  │   │3D TARGET │  │
-│   │ LANGUAGE   │──▶│   PARSER   │──▶│VALIDATOR   │──▶│ COORDS   │  │
+│   │ LANGUAGE   │──▶│   PARSER   │──▶│VALIDATOR   │──▶│ COORDS │  │
 │   │ COMMAND    │   │            │   │            │   │ (x,y,z)  │  │
 │   └────────────┘   └────────────┘   └────────────┘   └─────┬────┘  │
 │                                                             │       │
@@ -103,50 +111,50 @@ The full pipeline is implemented in Robosuite (v1.4.1) simulation with four comm
 │   ┌──────────────────────────────────────────────────────────────┐  │
 │   │                    ROBOSUITE SIMULATION                      │  │
 │   │                                                              │  │
-│   │   ┌──────────┐   ┌──────────┐   ┌──────────┐   ┌─────────┐ │  │
-│   │   │  ROBOT   │   │ GRIPPER  │   │  JOINT   │   │ OBJECT  │ │  │
-│   │   │  STATE   │──▶│  STATE   │──▶│ANGLES/VEL│──▶│  POSE   │ │  │
-│   │   │ (25D)    │   │ (2D)     │   │ (14D)    │   │  (var)  │ │  │
-│   │   └──────────┘   └──────────┘   └──────────┘   └────┬────┘ │  │
-│   │                                                       │      │  │
-│   │                  PROPRIOCEPTION ONLY (no RGB)        │      │  │
+│   │   ┌──────────┐   ┌──────────┐   ┌──────────┐   ┌─────────┐ │ │
+│   │   │  ROBOT   │   │ GRIPPER  │   │  JOINT   │   │ OBJECT  │ │ │
+│   │   │  STATE   │──▶│  STATE   │──▶│ANGLES/VEL│──▶│  POSE │   │  │
+│   │   │ (25D)    │   │ (2D)     │   │ (14D)    │   │  (var)  │   │ │
+│   │   └──────────┘   └──────────┘   └──────────┘   └────┬────┘   │ │
+│   │                                                     │        │  │
+│   │                  PROPRIOCEPTION ONLY (no RGB)       │        │  │
 │   └───────────────────────────────────────────────────────┼──────┘  │
 │                                                           ▼         │
 │   ┌───────────────────────────────────────────────────────────────┐ │
 │   │                   VAE ENCODER (TRAINED)                       │ │
 │   │                                                               │ │
-│   │   Input: 25D proprioceptive sequence (T × 25)                │ │
-│   │   Encoder: [300, 400] MLP → μ, log σ²                        │ │
-│   │   Latent: z ~ N(μ, σ²)  (14D)                                │ │
-│   │   Output: latent_vae embedding                               │ │
+│   │   Input: 25D proprioceptive sequence (T × 25)                 │ │
+│   │   Encoder: [300, 400] MLP → μ, log σ²                         │ │
+│   │   Latent: z ~ N(μ, σ²)  (14D)                                 │ │
+│   │   Output: latent_vae embedding                                │ │
 │   └───────────────────────────────┬───────────────────────────────┘ │
 │                                   │                                 │
 │                                   ▼                                 │
 │   ┌───────────────────────────────────────────────────────────────┐ │
 │   │              BEHAVIORAL CLONING POLICY                        │ │
 │   │                                                               │ │
-│   │   Input: [proprioception (25D); latent_vae (14D)]  (39D)     │ │
+│   │   Input: [proprioception (25D); latent_vae (14D)]  (39D)      │ │
 │   │                                                               │ │
-│   │   ┌─────────────────────────────────────────────────────┐    │ │
-│   │   │          2-Layer MLP Policy Network                 │    │ │
-│   │   │                                                     │    │ │
-│   │   │   h₁ = ReLU(W₁·s + b₁)     [1024 units]           │    │ │
-│   │   │   h₂ = ReLU(W₂·h₁ + b₂)    [1024 units]           │    │ │
-│   │   │   aˆ = W₃·h₂ + b₃          [action_dim]           │    │ │
-│   │   │                                                     │    │ │
-│   │   │   Loss: λ₂‖a-aˆ‖² + λ₁‖a-aˆ‖₁ + λc(1-cos(a,aˆ))   │    │ │
-│   │   │   Optimizer: Adam (lr=1e-4)                        │    │ │
-│   │   └─────────────────────────────────────────────────────┘    │ │
+│   │   ┌─────────────────────────────────────────────────────┐     │ │
+│   │   │          2-Layer MLP Policy Network                 │     │ │
+│   │   │                                                     │     │ │
+│   │   │   h₁ = ReLU(W₁·s + b₁)     [1024 units]             │     │ │
+│   │   │   h₂ = ReLU(W₂·h₁ + b₂)    [1024 units]             │     │ │
+│   │   │   aˆ = W₃·h₂ + b₃          [action_dim]             │     │ │
+│   │   │                                                     │     │ │
+│   │   │   Loss: λ₂‖a-aˆ‖² + λ₁‖a-aˆ‖₁ + λc(1-cos(a,aˆ))     │     │ │
+│   │   │   Optimizer: Adam (lr=1e-4)                         │     │ │
+│   │   └─────────────────────────────────────────────────────┘     │ │
 │   │                                                               │ │
-│   │   Output: End-effector velocity command (7D)                 │ │
+│   │   Output: End-effector velocity command (7D)                  │ │
 │   └───────────────────────────────┬───────────────────────────────┘ │
 │                                   │                                 │
 │                                   ▼                                 │
 │   ┌───────────────────────────────────────────────────────────────┐ │
 │   │                  ROBOSUITE EXECUTION                          │ │
 │   │                                                               │ │
-│   │   Apply action → Step simulation → Measure success           │ │
-│   │   Repeat until: object at target OR horizon reached          │ │
+│   │   Apply action → Step simulation → Measure success            │ │
+│   │   Repeat until: object at target OR horizon reached           │ │
 │   └───────────────────────────────────────────────────────────────┘ │
 └─────────────────────────────────────────────────────────────────────┘
 ```
@@ -201,6 +209,17 @@ The full pipeline is implemented in Robosuite (v1.4.1) simulation with four comm
 ---
 
 ## 🔬 Technical Approach
+
+<div align="center">
+
+
+<p float="left">
+<img src="output_images/pickplacegraph.png" alt="Competition Stack" width="34%" />
+  <img src="output_images/graph2.png" alt="Robot Setup" width="40%" />
+</p>
+
+</div>
+
 
 ### 1. Language-to-Goal Planning with GPT-4o
 
@@ -787,12 +806,6 @@ An early attempt trained the VAE on raw RGB images (agentview + eye-in-hand) to 
 
 **Lesson:** VAEs excel on low-dimensional structured data (proprioception) but struggle with high-dimensional unstructured data (images) in this task domain. For visual feature extraction, contrastive learning or pre-trained vision encoders (e.g., ResNet, CLIP) are more appropriate.
 
-### 3. Cosine Loss Dominance (λc = 1.0)
-
-Setting λc = 1.0 (equal weight to L₂) caused directional overfitting — the policy matched action directions but produced incorrect magnitudes, resulting in erratic gripper motions.
-
-**Lesson:** Magnitude precision (L₂) is more critical than directional alignment for pick-and-place. The cosine term should be auxiliary (λc ≪ 1.0) or disabled entirely.
-
 ---
 
 ## 📚 Lessons Learned
@@ -814,10 +827,6 @@ Setting λc = 1.0 (equal weight to L₂) caused directional overfitting — the 
 4. **Two-Stage Training (VAE → BC)**
    - Separating VAE pre-training from BC policy training avoided representational interference.
    - Precomputed latents can be cached, reducing BC training time by 30%.
-
-5. **Drop Recovery Emerged Naturally**
-   - The policy learned to re-grasp dropped objects without explicit programming.
-   - This behavior arose from demonstrations that included partial-grasp failures.
 
 ---
 
